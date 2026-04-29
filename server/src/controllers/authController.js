@@ -13,7 +13,6 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     if (isPostgres) {
       await pool.query(
         `INSERT INTO users (name, email, password)

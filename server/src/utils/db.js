@@ -1,6 +1,5 @@
 const sql = require("mssql");
 const { Pool } = require("pg");
-
 const isPostgres = !!process.env.POSTGRES_URI;
 
 // PostgreSQL pool

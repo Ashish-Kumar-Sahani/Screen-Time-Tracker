@@ -20,10 +20,10 @@ const sqlConfig = {
 };
 //   POSTGRES CONFIG
 const pgPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PG_SSL === "true"
-    ? { rejectUnauthorized: false }
-    : false
+ connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 //   SINGLETON POOLS
 let sqlPool = null;

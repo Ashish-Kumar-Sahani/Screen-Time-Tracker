@@ -9,7 +9,7 @@ const limitRoutes = require("./routes/limitRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173","http://localhost:5174"],
   credentials: true
 }));
 
