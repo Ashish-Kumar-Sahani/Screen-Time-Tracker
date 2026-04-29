@@ -36,17 +36,19 @@ const Dashboard = () => {
           API.get("/usage/today-summary"),
           API.get("/usage/productivity-score")
         ]);
+const graph = (weeklyGraphRes.data || []).map((row) => {
+  const d = new Date(row.usage_date); // ✅ FIXED
 
-        const graph = (weeklyGraphRes.data || []).map((row) => {
-          const d = new Date(row.usageDate);
-          const day = d.toLocaleDateString("en-US", { weekday: "short" });
+  const day = d.toLocaleDateString("en-IN", { 
+    weekday: "short" 
+  });
 
-          return {
-            day,
-            hours: Number((row.totalTime / 60).toFixed(1)),
-            productiveHours: Number((row.productiveTime / 60).toFixed(1))
-          };
-        });
+  return {
+    day,
+    hours: Number(((row.total_time || 0) / 60).toFixed(1)),
+    productiveHours: Number(((row.productive_time || 0) / 60).toFixed(1))
+  };
+});
 
         setWeeklyData(graph);
         setToday(todayRes.data);
@@ -70,8 +72,9 @@ const Dashboard = () => {
   }
 
   const todayHours = Number((today.totalScreenTime / 60).toFixed(1));
-  const totalWeekHours = Number((score.totalTime / 60).toFixed(1));
-
+ const totalWeekHours = Number(
+  ((score.totalTime ?? score.total_time ?? 0) / 60).toFixed(1)
+);
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-950">
       <Sidebar />
