@@ -12,12 +12,14 @@ const errorHandler = require("./middleware/errorMiddleware");
 const corsOptions = {
   origin: [
     "http://localhost:5173",
-    "https://ashish-kumar-sahani.github.io"
+    "https://ashish-kumar-sahani.github.io",
+    "https://ashish-kumar-sahani.github.io/Screen-Time-Tracker"
   ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 };
 
-// ✅ MUST be at top
 app.use(cors(corsOptions));
 
 // ✅ Handle preflight requests properly
