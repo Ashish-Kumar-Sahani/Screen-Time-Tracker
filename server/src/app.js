@@ -14,8 +14,6 @@ const corsOptions = {
     "http://localhost:5173",
     "https://ashish-kumar-sahani.github.io"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 };
 
