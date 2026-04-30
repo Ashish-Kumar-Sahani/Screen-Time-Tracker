@@ -3,35 +3,41 @@ const cors = require("cors");
 
 const app = express();
 
-
 const authRoutes = require("./routes/authRoutes");
 const usageRoutes = require("./routes/usageRoutes");
 const limitRoutes = require("./routes/limitRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
-// app.use(cors({
-//   origin: ["http://localhost:5173","http://localhost:5174"],
-//   credentials: true
-// }));
-app.use(cors({
+// ✅ CORS CONFIG (IMPORTANT)
+const corsOptions = {
   origin: [
     "http://localhost:5173",
     "https://ashish-kumar-sahani.github.io"
   ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
-}));
-app.options("/*", cors());
+};
+
+// ✅ MUST be at top
+app.use(cors(corsOptions));
+
+// ✅ Handle preflight requests properly
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
+// ✅ Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/usage", usageRoutes);
 app.use("/api/limit", limitRoutes);
 
-app.use(errorHandler);
-
+// ✅ Test route
 app.get("/", (req, res) => {
   res.json({ message: "Screen Time Tracker API Running 🚀" });
 });
+
+// ✅ Error handler LAST में
+app.use(errorHandler);
 
 module.exports = app;
