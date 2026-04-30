@@ -13,9 +13,11 @@ const errorHandler = require("./middleware/errorMiddleware");
 //   credentials: true
 // }));
 app.use(cors({
-  origin: "https://ashish-kumar-sahani.github.io",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: [
+    "http://localhost:5173",
+    "https://ashish-kumar-sahani.github.io"
+  ],
+  credentials: true
 }));
 app.options("*", cors());
 app.use(express.json());
