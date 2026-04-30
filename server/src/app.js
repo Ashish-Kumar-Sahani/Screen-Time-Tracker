@@ -3,41 +3,41 @@ const cors = require("cors");
 
 const app = express();
 
-const authRoutes = require("./routes/authRoutes");
-const usageRoutes = require("./routes/usageRoutes");
-const limitRoutes = require("./routes/limitRoutes");
-const errorHandler = require("./middleware/errorMiddleware");
+// ✅ IMPORTANT: सबसे पहले ये लगाओ
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://ashish-kumar-sahani.github.io"
+];
 
-// ✅ CORS CONFIG (IMPORTANT)
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://ashish-kumar-sahani.github.io",
-    "https://ashish-kumar-sahani.github.io/Screen-Time-Tracker"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+app.use(cors({
+  origin: function(origin, callback){
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS blocked"));
+    }
+  },
   credentials: true
-};
+}));
 
-app.use(cors(corsOptions));
+// ✅ यह भी जरूरी है (preflight fix)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://ashish-kumar-sahani.github.io");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-// ✅ Handle preflight requests properly
-app.options("*", cors(corsOptions));
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 app.use(express.json());
 
-// ✅ Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/usage", usageRoutes);
-app.use("/api/limit", limitRoutes);
-
-// ✅ Test route
-app.get("/", (req, res) => {
-  res.json({ message: "Screen Time Tracker API Running 🚀" });
-});
-
-// ✅ Error handler LAST में
-app.use(errorHandler);
+// routes
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/usage", require("./routes/usageRoutes"));
+app.use("/api/limit", require("./routes/limitRoutes"));
 
 module.exports = app;
