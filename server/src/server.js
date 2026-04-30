@@ -3,12 +3,6 @@ const app = require("./app");
 const { getPool } = require("./config/db");
 const cors = require("cors");
 
-app.use(cors({
-  origin: "https://ashish-kumar-sahani.github.io",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-app.options("*", cors());
 
 const PORT = process.env.PORT || 5000;
 app.use(cors({
