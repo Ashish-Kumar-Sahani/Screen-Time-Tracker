@@ -8,11 +8,16 @@ const usageRoutes = require("./routes/usageRoutes");
 const limitRoutes = require("./routes/limitRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
+// app.use(cors({
+//   origin: ["http://localhost:5173","http://localhost:5174"],
+//   credentials: true
+// }));
 app.use(cors({
-  origin: ["http://localhost:5173","http://localhost:5174"],
-  credentials: true
+  origin: "https://ashish-kumar-sahani.github.io",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
-
+app.options("*", cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
