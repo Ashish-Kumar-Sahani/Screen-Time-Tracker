@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const app = express();
 
+
 const authRoutes = require("./routes/authRoutes");
 const usageRoutes = require("./routes/usageRoutes");
 const limitRoutes = require("./routes/limitRoutes");
@@ -19,7 +20,8 @@ app.use(cors({
   ],
   credentials: true
 }));
-app.options("*", cors());
+app.options("/*", cors());
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
