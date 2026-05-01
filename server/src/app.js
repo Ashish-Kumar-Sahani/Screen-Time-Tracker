@@ -3,7 +3,7 @@ const cors = require("cors");
 
 const app = express();
 
-// ✅ IMPORTANT: सबसे पहले ये लगाओ
+// ✅ both local and deployed origins allowed
 const allowedOrigins = [
   "http://localhost:5173",
   "https://ashish-kumar-sahani.github.io"
