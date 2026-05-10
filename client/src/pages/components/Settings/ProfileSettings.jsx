@@ -1,19 +1,25 @@
 import { useState } from "react";
 import defaultImg from "../../../assets/default_Profile.jpg";
-
+import { supabase } from "../../../supabaseClient";
 
 const ProfileSettings = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
 
-  const [profile, setProfile] = useState({
-    name: storedUser?.name || "username",
-    email: storedUser?.email || "user@example.com",
-  });
-``
-  const [imagePreview, setImagePreview] = useState(
-    localStorage.getItem("profileImage") || ""
-  );
+ const [profile, setProfile] = useState({
+  name: storedUser?.name || "username",
+  email: storedUser?.email || "user@example.com",
 
+  profileImage:
+    storedUser?.profileImage ||
+    storedUser?.profile_image ||
+    "",
+});
+
+ const [imagePreview, setImagePreview] = useState(
+  storedUser?.profileImage ||
+  storedUser?.profile_image ||
+  ""
+);
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
@@ -22,6 +28,17 @@ const ProfileSettings = () => {
   const LOCAL_URL = "http://localhost:5000/api/auth/profile";
   const LIVE_URL =
     "https://screen-time-tracker-vr7o.onrender.com/api/auth/profile";
+
+  const tryFetch = async (url, token) => {
+    return fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(profile),
+    });
+  };
 
   const handleSave = async () => {
     const token = localStorage.getItem("token");
@@ -34,32 +51,13 @@ const ProfileSettings = () => {
     let res;
 
     try {
-      // ✅ First try localhost
-      res = await fetch(LOCAL_URL, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(profile),
-      });
-    } catch (err) {
-      console.log("Local failed, trying live...");
+      res = await tryFetch(LOCAL_URL, token);
+      if (!res.ok) throw new Error();
+    } catch {
+      res = await tryFetch(LIVE_URL, token);
     }
 
     try {
-      // ✅ If localhost failed OR not ok → try live
-      if (!res || !res.ok) {
-        res = await fetch(LIVE_URL, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(profile),
-        });
-      }
-
       const data = await res.json();
 
       if (!res.ok) {
@@ -67,28 +65,56 @@ const ProfileSettings = () => {
         return;
       }
 
-      // ✅ Save updated user
-      localStorage.setItem("user", JSON.stringify(profile));
+      // ✅ Save updated user (with image)
+      localStorage.setItem(
+  "user",
+  JSON.stringify(data.user)
+);
+// ✅ ALSO save profile image separately
+localStorage.setItem(
+  "profileImage",
+  data.user.profileImage || ""
+);
 
       alert(data.message || "Profile updated successfully ✅");
-    } catch (error) {
+      window.location.reload();
+    }
+    catch (error) {
       console.error("ERROR:", error);
-      alert("Both servers failed ❌");
+      alert("Server error ❌");
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // 🔥 IMAGE UPLOAD (Supabase)
+ const handleImageChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-      localStorage.setItem("profileImage", reader.result);
-    };
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}.${fileExt}`;
 
-    reader.readAsDataURL(file);
-  };
+  const { error } = await supabase.storage
+    .from("profile-images")
+    .upload(fileName, file);
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
+
+  const { data } = supabase.storage
+    .from("profile-images")
+    .getPublicUrl(fileName);
+
+  const imageUrl = data.publicUrl;
+
+  setImagePreview(imageUrl);
+  setProfile((prev) => ({
+    ...prev,
+    profileImage: imageUrl,
+  }));
+};
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6">
@@ -101,8 +127,7 @@ const ProfileSettings = () => {
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
             <img
-              // 🔥 FIXED PATH
-              src={imagePreview || defaultImg}
+              src={profile.profileImage || imagePreview || defaultImg}
               alt="profile"
               className="w-24 h-24 rounded-full object-cover border-4 border-indigo-500 shadow-md"
             />

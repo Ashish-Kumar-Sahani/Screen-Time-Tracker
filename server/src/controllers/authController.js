@@ -135,33 +135,46 @@ exports.getProfile = async (req, res) => {
 ========================= */
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, profileImage } = req.body; // 🔥 added
+
     const pool = await getPool();
 
     if (isPostgres) {
       await pool.query(
-        `UPDATE users SET name = $1, email = $2 WHERE id = $3`,
-        [name, email, req.user.id]
+        `UPDATE users 
+         SET name = $1, email = $2, profile_image = $3 
+         WHERE id = $4`,
+        [name, email, profileImage, req.user.id]
       );
     } else {
       await pool.request()
         .input("id", sql.Int, req.user.id)
         .input("name", sql.VarChar, name)
         .input("email", sql.VarChar, email)
+        .input("profile_image", sql.VarChar, profileImage) // 🔥 added
         .query(`
           UPDATE Users
-          SET name = @name, email = @email
+          SET name = @name,
+              email = @email,
+              profile_image = @profile_image
           WHERE id = @id
         `);
     }
 
-    res.json({ message: "Profile updated ✅" });
+  res.json({
+  message: "Profile updated successfully ✅",
+  user: {
+    name,
+    email,
+    profileImage,
+  },
+});
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Server error ❌" });
   }
 };
-
 /* =========================
    CHANGE PASSWORD
 ========================= */

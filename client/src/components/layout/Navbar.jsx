@@ -23,7 +23,7 @@ try {
 
 
   // 🔥 FIXED IMAGE HANDLING
-  const profileImage = localStorage.getItem("profileImage");
+  const profileImage = user?.profileImage;
   const base = import.meta.env.BASE_URL;
   const handleMenuChange = (e) => {
     const value = e.target.value;
@@ -67,11 +67,13 @@ try {
         </select>
 
         <img
-          src={profileImage ? profileImage : `${base}ProfileLogo.png`}
-          onError={(e) => (e.target.src = `${base}ProfileLogo.png`)}
-          alt="profile"
-          className="w-10 h-10 rounded-full object-cover"
-        />
+  src={profileImage || `${base}ProfileLogo.png`}
+  onError={(e) => {
+    e.target.src = `${base}ProfileLogo.png`;
+  }}
+  alt="profile"
+  className="w-10 h-10 rounded-full object-cover"
+/>
       </div>
     </div>
   );
