@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const { getPool, sql } = require("../config/db");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 const isPostgres = process.env.DB_TYPE === "postgres";
 
@@ -45,9 +47,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const pool = await getPool();
-
     let user;
-
     if (isPostgres) {
       const result = await pool.query(
         "SELECT * FROM users WHERE email = $1",
@@ -83,6 +83,24 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+    // Save token for tracker authentication
+    const tokenFilePath = path.join(__dirname, "../../../token.json");
+
+let trackerData = {
+  token: "",
+  enabled: false
+};
+
+if (fs.existsSync(tokenFilePath)) {
+  trackerData = JSON.parse(fs.readFileSync(tokenFilePath, "utf-8"));
+}
+
+trackerData.token = token;
+
+fs.writeFileSync(
+  tokenFilePath,
+  JSON.stringify(trackerData, null, 2)
+);
 
     res.json({
       message: "Login successful ✅",
@@ -121,7 +139,6 @@ exports.getProfile = async (req, res) => {
           FROM Users
           WHERE id = @id
         `);
-
       return res.json(result.recordset[0]);
     }
 

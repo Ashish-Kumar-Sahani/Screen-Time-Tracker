@@ -18,34 +18,116 @@ const runQuery = async (pool, query, params = []) => {
 };
 
 //   ADD USAGE
+/*=============================
+Recent Update :Added source field to track whether the usage was added manually or tracked automatically
+============================= */
 exports.addUsage = async (req, res) => {
   try {
-    const { app_name, time_spent, category } = req.body;
+    const { app_name, time_spent, category, source = "manual" } = req.body;
     const user_id = req.user.id;
     const pool = await getPool();
 
     if (isPostgres) {
-      await runQuery(
-        pool,
-        `INSERT INTO usage (user_id, app_name, time_spent,usage_date, category)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [user_id, app_name, time_spent, new Date(), category]
-      );
+      if (source === "auto") {
+        const existing = await runQuery(
+          pool,
+          `SELECT id FROM usage
+           WHERE user_id = $1
+           AND app_name = $2
+           AND source = 'auto'
+           AND DATE(usage_date) = CURRENT_DATE
+           LIMIT 1`,
+          [user_id, app_name]
+        );
+
+        if (existing.length > 0) {
+          await runQuery(
+            pool,
+            `UPDATE usage
+             SET time_spent = time_spent + $1,
+                 category = $2
+             WHERE id = $3`,
+            [time_spent, category, existing[0].id]
+          );
+        } else {
+          await runQuery(
+            pool,
+            `INSERT INTO usage
+             (user_id, app_name, time_spent, usage_date, category, source)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [user_id, app_name, time_spent, new Date(), category, source]
+          );
+        }
+      } else {
+        await runQuery(
+          pool,
+          `INSERT INTO usage
+           (user_id, app_name, time_spent, usage_date, category, source)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [user_id, app_name, time_spent, new Date(), category, source]
+        );
+      }
     } else {
-      await runQuery(pool,
-        `INSERT INTO Usage (user_id, app_name, time_spent, category)
-         VALUES (@user_id, @app_name, @time_spent, @category)`,
-        [
-          { name: "user_id", type: sql.Int, value: user_id },
-          { name: "app_name", type: sql.VarChar, value: app_name },
-          { name: "time_spent", type: sql.Int, value: time_spent },
-          { name: "category", type: sql.VarChar, value: category }
-        ]
-      );
+      if (source === "auto") {
+        const existing = await runQuery(
+          pool,
+          `SELECT TOP 1 id FROM Usage
+           WHERE user_id = @user_id
+           AND app_name = @app_name
+           AND source = 'auto'
+           AND CAST(usage_date AS DATE) = CAST(GETDATE() AS DATE)`,
+          [
+            { name: "user_id", type: sql.Int, value: user_id },
+            { name: "app_name", type: sql.VarChar, value: app_name }
+          ]
+        );
+
+        if (existing.length > 0) {
+          await runQuery(
+            pool,
+            `UPDATE Usage
+             SET time_spent = time_spent + @time_spent,
+                 category = @category
+             WHERE id = @id`,
+            [
+              { name: "time_spent", type: sql.Int, value: time_spent },
+              { name: "category", type: sql.VarChar, value: category },
+              { name: "id", type: sql.Int, value: existing[0].id }
+            ]
+          );
+        } else {
+          await runQuery(
+            pool,
+            `INSERT INTO Usage
+             (user_id, app_name, time_spent, category, source)
+             VALUES (@user_id, @app_name, @time_spent, @category, @source)`,
+            [
+              { name: "user_id", type: sql.Int, value: user_id },
+              { name: "app_name", type: sql.VarChar, value: app_name },
+              { name: "time_spent", type: sql.Int, value: time_spent },
+              { name: "category", type: sql.VarChar, value: category },
+              { name: "source", type: sql.VarChar, value: source }
+            ]
+          );
+        }
+      } else {
+        await runQuery(
+          pool,
+          `INSERT INTO Usage
+           (user_id, app_name, time_spent, category, source)
+           VALUES (@user_id, @app_name, @time_spent, @category, @source)`,
+          [
+            { name: "user_id", type: sql.Int, value: user_id },
+            { name: "app_name", type: sql.VarChar, value: app_name },
+            { name: "time_spent", type: sql.Int, value: time_spent },
+            { name: "category", type: sql.VarChar, value: category },
+            { name: "source", type: sql.VarChar, value: source }
+          ]
+        );
+      }
     }
 
-    res.json({ message: "Usage added ✅" });
-
+    res.json({ message: "Usage saved ✅" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

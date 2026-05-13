@@ -141,26 +141,51 @@ const Reports = () => {
                       <th className="py-3 px-2">App Name</th>
                       <th className="py-3 px-2">Time Spent</th>
                       <th className="py-3 px-2">Category</th>
+                      <th className="py-3 px-2">Source</th>{/*updated source column in usage history to show whether the usage was tracked automatically or added manually */}
                       <th className="py-3 px-2">Date</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {usage.map((item) => (
-                      <tr
-                        key={item.id}
-                        className="border-b border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-200"
-                      >
-                        <td className="py-3 px-2">{item.app_name}</td>
-                        <td className="py-3 px-2">{item.time_spent} min</td>
-                        <td className="py-3 px-2 capitalize">{item.category || "N/A"}</td>
-                        <td className="py-3 px-2">
-                          {item.usage_date
-                            ? new Date(item.usage_date).toLocaleDateString()
-                            : "N/A"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                {  /*==============================================
+                  Recent Update tbody added to show usage history in report page
+                  ==============================================*/}
+<tbody>
+  {usage.map((item) => (
+    <tr
+      key={item.id}
+      className="border-b border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-200"
+    >
+      <td className="py-3 px-2">{item.app_name}</td>
+
+      <td className="py-3 px-2">
+        {Math.round(item.time_spent)} min
+      </td>
+
+      <td className="py-3 px-2 capitalize">
+        {item.category || "N/A"}
+      </td>
+
+      {/* SOURCE */}
+      <td className="py-3 px-2">
+        <span
+          className={`px-2 py-1 rounded-lg text-xs font-medium ${
+            item.source === "manual"
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+              : "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+          }`}
+        >
+          {item.source || "auto"}
+        </span>
+      </td>
+
+      {/* DATE */}
+      <td className="py-3 px-2">
+        {item.usage_date
+          ? new Date(item.usage_date).toLocaleDateString("en-IN")
+          : "N/A"}
+      </td>
+    </tr>
+  ))}
+</tbody>
                 </table>
               ) : (
                 <p className="text-gray-500 dark:text-gray-400">

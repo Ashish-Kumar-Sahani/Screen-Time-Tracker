@@ -17,7 +17,10 @@ const handleSubmit = async (e) => {
     try {
     await API.post("/limit/set", form);
     setMsg("✅ Limit saved");
-    } catch {
+
+    setTimeout(() => navigate("/dashboard"), 600);
+    }
+    catch {
     setMsg("❌ Error saving limit");
     }
 };

@@ -25,5 +25,6 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/usage", require("./routes/usageRoutes"));
 app.use("/api/limit", require("./routes/limitRoutes"));
+app.use("/api/tracker", require("./routes/trackerRoutes"));
 
 module.exports = app;
